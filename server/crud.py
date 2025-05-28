@@ -4,7 +4,7 @@ from typing import List, Optional
 # Nếu crud.py và models.py cùng cấp trong thư mục app, thì import như sau:
 from models import Voter, Vote
 # Nếu chúng ở các vị trí khác, bạn cần điều chỉnh đường dẫn import.
-import datetime
+from datetime import datetime, timezone
 import uuid
 
 # --- Không còn INITIAL_ELIGIBLE_VOTER_IDS và get_initial_voter_ids() ---
@@ -48,7 +48,7 @@ async def issue_token_to_voter(voter: Voter, token_value: str) -> Voter: # Luôn
     """
     voter.vote_token = token_value
     voter.has_received_token = True
-    voter.token_issued_at = datetime.datetime.utcnow()
+    voter.token_issued_at = datetime.now(timezone.utc)
     await voter.save() # Beanie's save handles updates if document already exists
     print(f"CRUD: Issued token {token_value} to voter {voter.personal_id}")
     return voter
@@ -59,7 +59,7 @@ async def mark_voter_as_voted(voter: Voter) -> bool:
     """
     # Không cần kiểm tra if voter nữa vì logic gọi hàm này thường đã đảm bảo voter tồn tại
     voter.has_voted = True
-    voter.voted_at = datetime.datetime.utcnow()
+    voter.voted_at = datetime.now(timezone.utc)
     await voter.save()
     print(f"CRUD: Marked voter {voter.personal_id} (token: {voter.vote_token}) as voted.")
     return True
