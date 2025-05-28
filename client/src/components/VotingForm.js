@@ -41,6 +41,7 @@ function VotingForm() {
       return;
     }
     try {
+      console.log("[DEBUG]", `${API_BASE_URL}/get-vote-token`);
       const response = await axios.post(`${API_BASE_URL}/get-vote-token`, { personal_id: personalId });
       setVoteToken(response.data.vote_token);
       localStorage.setItem('voteToken', response.data.vote_token); // Lưu token

@@ -8,7 +8,7 @@ class PersonalIdRequest(BaseModel):
     personal_id: str
 
 class VoteTokenResponse(BaseModel):
-    token: str
+    vote_token: str
 
 class EncryptedVotePayload(BaseModel):
     encrypted_vote: str

@@ -1,51 +1,38 @@
 # backend/app/crud.py
 from typing import List, Optional
+# Đảm bảo rằng import này trỏ đúng đến file models.py của bạn
+# Nếu crud.py và models.py cùng cấp trong thư mục app, thì import như sau:
 from models import Voter, Vote
+# Nếu chúng ở các vị trí khác, bạn cần điều chỉnh đường dẫn import.
 import datetime
-import uuid # Dùng nếu bạn cần UUID tùy chỉnh, không cần cho vote_token vì đã dùng str(uuid.uuid4())
+import uuid
 
-# --- Danh sách cử tri hợp lệ ban đầu (có thể đọc từ file CSV, JSON, ...) ---
-INITIAL_ELIGIBLE_VOTER_IDS = ["MSV123", "MSV456", "CCCD789", "TEACHER001", "USER005"]
-
-async def get_initial_voter_ids() -> List[str]:
-    return INITIAL_ELIGIBLE_VOTER_IDS
+# --- Không còn INITIAL_ELIGIBLE_VOTER_IDS và get_initial_voter_ids() ---
 
 async def populate_initial_voters_if_empty() -> int:
     """
-    Populates the Voter collection with initial eligible voters if they don't exist yet.
-    Returns the number of newly added voters.
+    Hàm này không còn ý nghĩa nhiều nếu không có danh sách cử tri ban đầu.
+    Bạn có thể xóa nó hoặc giữ lại nếu có mục đích khác (ví dụ: tạo một vài voter mẫu).
+    Hiện tại, sẽ trả về 0 vì không có logic populate.
     """
-    count = 0
-    eligible_ids = await get_initial_voter_ids()
-    for pid in eligible_ids:
-        existing_voter = await Voter.find_one(Voter.personal_id == pid)
-        if not existing_voter:
-            new_voter = Voter(personal_id=pid)
-            await new_voter.insert()
-            count += 1
-            print(f"CRUD: Added initial voter: {pid}")
-    if count > 0:
-        print(f"CRUD: Successfully populated {count} initial voters.")
-    return count
+    print("CRUD: populate_initial_voters_if_empty - No initial voter list defined. Skipping population.")
+    return 0
 
-async def find_or_create_voter(personal_id: str) -> Optional[Voter]:
+async def find_or_create_voter(personal_id: str) -> Voter: # Luôn trả về Voter
     """
-    Finds a voter by personal_id. If not found AND the personal_id is in the
-    eligible list, creates a new voter document.
-    Returns the Voter object or None if not eligible.
+    Finds a voter by personal_id. If not found, creates a new voter document.
+    Returns the Voter object (either existing or newly created).
     """
     voter = await Voter.find_one(Voter.personal_id == personal_id)
     if voter:
+        print(f"CRUD: Found existing voter: {personal_id}")
         return voter
-
-    # If voter not found, check if they are eligible to be created
-    eligible_ids = await get_initial_voter_ids()
-    if personal_id in eligible_ids:
+    else:
+        # Nếu cử tri không tồn tại, tạo mới mà không cần kiểm tra danh sách hợp lệ
         new_voter = Voter(personal_id=personal_id)
         await new_voter.insert()
         print(f"CRUD: Created new voter: {personal_id}")
         return new_voter
-    return None # Not found and not eligible to be created
 
 async def get_voter_by_personal_id(personal_id: str) -> Optional[Voter]:
     return await Voter.find_one(Voter.personal_id == personal_id)
@@ -55,7 +42,7 @@ async def get_voter_by_vote_token(token: str) -> Optional[Voter]:
         return None
     return await Voter.find_one(Voter.vote_token == token)
 
-async def issue_token_to_voter(voter: Voter, token_value: str) -> Optional[Voter]:
+async def issue_token_to_voter(voter: Voter, token_value: str) -> Voter: # Luôn trả về Voter nếu thành công
     """
     Updates the voter document with the new token and issuance timestamp.
     """
@@ -70,13 +57,13 @@ async def mark_voter_as_voted(voter: Voter) -> bool:
     """
     Marks a Voter object as having voted and sets the voted_at timestamp.
     """
-    if voter:
-        voter.has_voted = True
-        voter.voted_at = datetime.datetime.utcnow()
-        await voter.save()
-        print(f"CRUD: Marked voter {voter.personal_id} (token: {voter.vote_token}) as voted.")
-        return True
-    return False
+    # Không cần kiểm tra if voter nữa vì logic gọi hàm này thường đã đảm bảo voter tồn tại
+    voter.has_voted = True
+    voter.voted_at = datetime.datetime.utcnow()
+    await voter.save()
+    print(f"CRUD: Marked voter {voter.personal_id} (token: {voter.vote_token}) as voted.")
+    return True
+
 
 async def store_vote(encrypted_data: str, token_used: str) -> Vote:
     """
