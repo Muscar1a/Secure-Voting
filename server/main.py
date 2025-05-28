@@ -40,37 +40,38 @@ app.add_middleware(
 )
 
 
+
 @app.on_event("startup")
 async def app_startup_event():
     """
     Initialize Beanie ORM with MongoDB connection on application startup.
     """
     print("MAIN: Application startup...")
-    try:
-        client = AsyncIOMotorClient(settings.MONGODB_URL)
-        # Access the database instance using the name from settings
-        database_instance = client[settings.DATABASE_NAME]
+    # try:
+    print(f"MAIN: Loaded Settings: MONGODB_URL='{settings.MONGODB_URL}', DATABASE_NAME='{settings.DATABASE_NAME}'")
+    
+    client = AsyncIOMotorClient(settings.MONGODB_URL)
+    # Access the database instance using the name from settings
+    database_instance = client[settings.DATABASE_NAME]
 
-        await init_beanie(
-            database=database_instance,
-            document_models=[
-                Voter,
-                Vote,
-            ],
-        )
-        print(f"MAIN: Connected to MongoDB: '{settings.MONGODB_URL}', DB: '{settings.DATABASE_NAME}'")
-        print(f"MAIN: Beanie initialized with models: {[Voter.__name__, Vote.__name__]}")
+    await init_beanie(
+        database=database_instance,
+        document_models=[
+            Voter,
+            Vote,
+        ],
+    )
+    print(f"MAIN: Connected to MongoDB: '{settings.MONGODB_URL}', DB: '{settings.DATABASE_NAME}'")
+    print(f"MAIN: Beanie initialized with models: {[Voter.__name__, Vote.__name__]}")
 
-        # Optional: Populate initial voters if the collection is empty or specific IDs are missing
-        # Điều này hữu ích cho việc thiết lập môi trường dev/test
-        # await crud.populate_initial_voters_if_empty() # Chạy 1 lần khi setup
-
+    # Optional: Populate initial voters if the collection is empty or specific IDs are missing
+    # Điều này hữu ích cho việc thiết lập môi trường dev/test
+    # await crud.populate_initial_voters_if_empty() # Chạy 1 lần khi setup
+        
+    """
     except Exception as e:
         print(f"MAIN: CRITICAL - Failed to connect to MongoDB or initialize Beanie: {e}")
-        # Bạn có thể quyết định dừng ứng dụng ở đây nếu DB là bắt buộc
-        # import sys
-        # sys.exit("MongoDB connection failed.")
-
+    """
 
 # --- Dependency for verifying vote token ---
 async def verify_and_get_voter_from_token(authorization: str = Header(None)): # Cho phép token là Optional
@@ -193,7 +194,7 @@ async def populate_initial_voters_endpoint():
     return {"message": "No new voters were added. They might already exist or the eligible list is empty."}
 
 # --- Health Check Endpoint ---
-@app.get("/health", status_code=status.HTTP_200_OK, tags=["System"])
+@app.get("/", status_code=status.HTTP_200_OK, tags=["System"])
 async def health_check():
     """Performs a simple health check."""
     return {"status": "ok", "message": "Voting System API is running."}
