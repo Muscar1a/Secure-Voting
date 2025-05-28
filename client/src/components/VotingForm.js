@@ -27,10 +27,19 @@ function VotingForm() {
   const [voteToken, setVoteToken] = useState(localStorage.getItem('voteToken') || '');
   const [selectedOption, setSelectedOption] = useState('');
   const [encryptedVote, setEncryptedVote] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  const VOTE_OPTIONS = ['Candidate A', 'Candidate B', 'Candidate C', 'Abstain']; // Các lựa chọn
+  const VOTE_OPTIONS = ['Candidate A', 'Candidate B', 'Candidate C', 'Candidate D'];
+
+  localStorage.removeItem('voteToken');
+
+  const clearMessages = () => {
+    setMessage('');
+    setError('');
+  }
+
 
   const handleGetToken = async () => {
     setError('');
@@ -57,12 +66,12 @@ function VotingForm() {
     try {
       const encrypt = new JSEncrypt();
       encrypt.setPublicKey(VOTING_SYSTEM_PUBLIC_KEY);
-      
+
       const ciphertext = encrypt.encrypt(voteOption);
       console.log("[DEBUG] Encrypted vote:", ciphertext);
       if (!ciphertext) {
-          setError("Encryption failed. The public key might be invalid or the data too large for RSA.");
-          return '';
+        setError("Encryption failed. The public key might be invalid or the data too large for RSA.");
+        return '';
       }
       return ciphertext;
     } catch (e) {
@@ -82,9 +91,9 @@ function VotingForm() {
   }, [selectedOption]);
 
 
-  const handleSubmitVote = async () => {
-    setError('');
-    setMessage('');
+  const handleSubmitVote = async (event) => {
+    event.preventDefault();
+    clearMessages();
     if (!voteToken) {
       setError('Please get a vote token first.');
       return;
@@ -97,20 +106,19 @@ function VotingForm() {
       setError('Could not encrypt your vote. Please try again or select an option.');
       return;
     }
-
+    setIsLoading(true);
     try {
       await axios.post(
         `${API_BASE_URL}/submit-vote`,
         { encrypted_vote: encryptedVote },
         { headers: { Authorization: `Bearer ${voteToken}` } }
       );
-      setMessage('Vote submitted successfully!');
+      setVoteToken('');
+      localStorage.removeItem('voteToken');
       setSelectedOption('');
       setEncryptedVote('');
-      // Xóa token sau khi vote thành công để tránh dùng lại?
-      // localStorage.removeItem('voteToken');
-      // setVoteToken('');
-      // Hoặc backend sẽ tự ngăn chặn việc dùng lại token
+      setPersonalId('');
+      console.log("[DEBUG] Vote submitted successfully");
     } catch (err) {
       const errorMsg = err.response?.data?.detail || 'Failed to submit vote. Your token might be invalid or already used.';
       setError(errorMsg);
@@ -156,7 +164,7 @@ function VotingForm() {
           {encryptedVote && (
             <div>
               <p>Encrypted Vote (for submission):</p>
-              <textarea value={encryptedVote} readOnly rows={5} style={{width: '80%'}}/>
+              <textarea value={encryptedVote} readOnly rows={5} style={{ width: '80%' }} />
             </div>
           )}
           <button onClick={handleSubmitVote} disabled={!selectedOption || !encryptedVote}>

@@ -38,7 +38,8 @@ class Vote(Document):
 
     encrypted_vote_data: str = Field(...)
     vote_token_used: str = Field(..., index=True)
-    submitted_at: datetime = Field(default_factory=datetime.now(timezone.utc), description="Timestamp of vote submission")
+    submitted_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Timestamp of vote submission")
+
 
     class Settings:
         name = "votes"
