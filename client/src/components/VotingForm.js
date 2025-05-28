@@ -11,15 +11,14 @@ import JSEncrypt from 'jsencrypt'; // For RSA Encryption
 // openssl genrsa -out private_key.pem 2048
 // openssl rsa -pubout -in private_key.pem -out public_key.pem
 const VOTING_SYSTEM_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAy8Dbv0n3+5O7mI5S
-L0yBenciq2APr5sPE1XshjlsudrUB3ks9y7vGvcbxKajvxQTmREVw71K2VAh
-lS2cwsO7X+jP7v7K+y5t6V+v3N9V6f0e9a8a1nZ0iE9X0wYk8sL7O0iV4U0N
-p0p7N0xX5A1mZ5o7v7y0u8l9F3o1b7h0D5W9W5T8s0h8c7y6Z7z6V3n4c9m8
-H0i7g5J4f2k1t0s9S8h6G3g2j8d7e6S5L4u3i0b9o8s7Y5q4w3c2v1b0a8k7
-X4j6s9f3d2n1m0c8b7a6d5e4f3g2h1j0k9l8m7n6p5o4i3z2x1y0w9v8c7b6
-a5s4wQIDAQAB
------END PUBLIC KEY-----`; // THAY THẾ BẰNG PUBLIC KEY THỰC CỦA BẠN
-
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsj7WxRYLzvg6PwN5VJ0p
+rI3bhJq0c2T7uFzP5nOVldn2OQQtWqT4gTzSzFkHqwqkVL5WzXhfBp1LX2Ps7P36
+TqA1O5v9v7rh2v3vL8cJyR7nFjz6e8ZeqkqI+YX7DZCq4Xezb9hlG2lQtW6LjRZ7
+LnMzJMjZH62aCUeR2L9UUS1vGx10y6xkHJNL7Z9FjkaG0B+u2AXZl1q+zJqHcoPz
+RleuKr1nxHh7pxmz8W+whkv7lDZtRMYcM1TW82LjGqUJOx1CjAvPQJkV9qPq5Q7b
+m6kLacYmF9y9qJyQOHXoQJ6IzEYWbkLrDLBiqm+7fwp34vTNBOq6Yt4wOgT2+8LC
+twIDAQAB
+-----END PUBLIC KEY-----`;
 
 const API_BASE_URL = 'http://localhost:8000'; // Địa chỉ backend FastAPI
 
@@ -28,10 +27,19 @@ function VotingForm() {
   const [voteToken, setVoteToken] = useState(localStorage.getItem('voteToken') || '');
   const [selectedOption, setSelectedOption] = useState('');
   const [encryptedVote, setEncryptedVote] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  const VOTE_OPTIONS = ['Candidate A', 'Candidate B', 'Candidate C', 'Abstain']; // Các lựa chọn
+  const VOTE_OPTIONS = ['Candidate A', 'Candidate B', 'Candidate C', 'Candidate D'];
+
+  localStorage.removeItem('voteToken');
+
+  const clearMessages = () => {
+    setMessage('');
+    setError('');
+  }
+
 
   const handleGetToken = async () => {
     setError('');
@@ -41,6 +49,7 @@ function VotingForm() {
       return;
     }
     try {
+      console.log("[DEBUG]", `${API_BASE_URL}/get-vote-token`);
       const response = await axios.post(`${API_BASE_URL}/get-vote-token`, { personal_id: personalId });
       setVoteToken(response.data.vote_token);
       localStorage.setItem('voteToken', response.data.vote_token); // Lưu token
@@ -57,10 +66,12 @@ function VotingForm() {
     try {
       const encrypt = new JSEncrypt();
       encrypt.setPublicKey(VOTING_SYSTEM_PUBLIC_KEY);
+
       const ciphertext = encrypt.encrypt(voteOption);
+      console.log("[DEBUG] Encrypted vote:", ciphertext);
       if (!ciphertext) {
-          setError("Encryption failed. The public key might be invalid or the data too large for RSA.");
-          return '';
+        setError("Encryption failed. The public key might be invalid or the data too large for RSA.");
+        return '';
       }
       return ciphertext;
     } catch (e) {
@@ -80,9 +91,9 @@ function VotingForm() {
   }, [selectedOption]);
 
 
-  const handleSubmitVote = async () => {
-    setError('');
-    setMessage('');
+  const handleSubmitVote = async (event) => {
+    event.preventDefault();
+    clearMessages();
     if (!voteToken) {
       setError('Please get a vote token first.');
       return;
@@ -95,20 +106,19 @@ function VotingForm() {
       setError('Could not encrypt your vote. Please try again or select an option.');
       return;
     }
-
+    setIsLoading(true);
     try {
       await axios.post(
         `${API_BASE_URL}/submit-vote`,
         { encrypted_vote: encryptedVote },
         { headers: { Authorization: `Bearer ${voteToken}` } }
       );
-      setMessage('Vote submitted successfully!');
+      setVoteToken('');
+      localStorage.removeItem('voteToken');
       setSelectedOption('');
       setEncryptedVote('');
-      // Xóa token sau khi vote thành công để tránh dùng lại?
-      // localStorage.removeItem('voteToken');
-      // setVoteToken('');
-      // Hoặc backend sẽ tự ngăn chặn việc dùng lại token
+      setPersonalId('');
+      console.log("[DEBUG] Vote submitted successfully");
     } catch (err) {
       const errorMsg = err.response?.data?.detail || 'Failed to submit vote. Your token might be invalid or already used.';
       setError(errorMsg);
@@ -154,7 +164,7 @@ function VotingForm() {
           {encryptedVote && (
             <div>
               <p>Encrypted Vote (for submission):</p>
-              <textarea value={encryptedVote} readOnly rows={5} style={{width: '80%'}}/>
+              <textarea value={encryptedVote} readOnly rows={5} style={{ width: '80%' }} />
             </div>
           )}
           <button onClick={handleSubmitVote} disabled={!selectedOption || !encryptedVote}>
