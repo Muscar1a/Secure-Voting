@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import JSEncrypt from 'jsencrypt';
+import { useNavigate } from 'react-router-dom';
 
 const VOTING_SYSTEM_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzXVFODm2NX+NTwGpB4Hc
@@ -24,6 +25,7 @@ function VotingForm() {
   const [isLoading, setIsLoading] = useState(false); // Sửa lại tên biến cho nhất quán
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
 
   const VOTE_OPTIONS = ['Candidate A', 'Candidate B', 'Candidate C', 'Candidate D'];
 
@@ -51,7 +53,7 @@ function VotingForm() {
     }
     setIsLoading(true); // Bắt đầu loading
     try {
-
+      const hashedId = await hashPersonalId(personalId);
       // console.log("[DEBUG]", `${API_BASE_URL}/get-vote-token`);
       const response = await axios.post(`${API_BASE_URL}/get-vote-token`, { personal_id: hashedId });
       const newVoteToken = response.data.vote_token;
@@ -96,6 +98,8 @@ function VotingForm() {
     }
   }, [selectedOption]); // Chỉ chạy khi selectedOption thay đổi
 
+  const navigate = useNavigate();
+
   const handleSubmitVote = async (event) => {
     event.preventDefault();
     clearMessages();
@@ -126,6 +130,19 @@ function VotingForm() {
       setPersonalId(''); // Reset cả personal ID
       setMessage(response.data.message || 'Vote submitted successfully! It is now pending external processing.'); // Sử dụng message từ backend
       // console.log("[DEBUG] Vote submitted successfully", response.data);
+
+      /*
+      setTimeout(() => {
+        navigate('/ThankYou', {
+          state: {
+            message: response.data.message,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }, 1500);
+      */
+
+      navigate('/ThankYou');
     } catch (err) {
       const errorMsg = err.response?.data?.detail || 'Failed to submit vote. Your token might be invalid or already used.';
       setError(errorMsg);
@@ -171,7 +188,7 @@ function VotingForm() {
       ) : (
         <section>
           <h2>Step 2: Cast Your Vote</h2>
-          <p>Your Vote Token: <code>{voteToken}</code></p>
+          {/* <p>Your Vote Token: <code>{voteToken}</code></p> */}
           <p>Please select your preferred candidate:</p>
           <div>
             {VOTE_OPTIONS.map(option => (
@@ -192,7 +209,7 @@ function VotingForm() {
             ))}
           </div>
           {selectedOption && <p>You selected: <strong>{selectedOption}</strong></p>}
-          
+
           {/* Không nhất thiết phải hiển thị encryptedVote cho người dùng cuối */}
           {/* {encryptedVote && (
             <div>
@@ -201,15 +218,15 @@ function VotingForm() {
             </div>
           )} */}
 
-          <button 
-            onClick={handleSubmitVote} 
+          <button
+            onClick={handleSubmitVote}
             disabled={isLoading || !selectedOption || !encryptedVote}
             style={{ marginTop: '20px', padding: '10px 20px', fontSize: '1.1em' }}
           >
             {isLoading ? 'Submitting Vote...' : 'Submit Encrypted Vote'}
           </button>
-          <button 
-            onClick={handleClearTokenAndRestart} 
+          <button
+            onClick={handleClearTokenAndRestart}
             disabled={isLoading}
             style={{ marginTop: '20px', marginLeft: '10px', padding: '10px 15px', backgroundColor: '#f0f0f0' }}
           >

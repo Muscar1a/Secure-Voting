@@ -71,11 +71,10 @@ async def get_votes_for_processing(limit: int = 1000, skip: int = 0) -> List[Vot
     
     return await query.skip(skip).limit(limit).to_list()
 
+"""
 async def update_vote_status_batch(vote_ids: List[str], new_status: VoteStatus):
-    """
     (Tùy chọn) Cập nhật trạng thái của một loạt phiếu bầu.
     Ví dụ: sau khi các Tally Authority đã nhận được phiếu, đánh dấu chúng là PROCESSING_BY_AUTHORITIES.
-    """
     # Beanie không hỗ trợ trực tiếp update_many với list các ID theo cách đơn giản như Pymongo.
     # Bạn có thể lặp qua hoặc sử dụng truy vấn $in nếu Beanie hỗ trợ.
     # Cách tiếp cận đơn giản hơn cho Beanie là từng phiếu một hoặc tìm cách dùng raw Pymongo.
@@ -102,7 +101,7 @@ async def update_vote_status_batch(vote_ids: List[str], new_status: VoteStatus):
 
     print(f"CRUD: Attempted to update status for {len(vote_ids)} votes to {new_status}. Successfully updated {count}.")
     return count
-
+"""
 
 async def get_all_votes() -> List[Vote]: # Giữ nguyên
     return await Vote.find_all().to_list()
