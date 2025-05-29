@@ -1,42 +1,62 @@
 // src/components/VoteResults.js
 import React, { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function VoteResults() {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const navigate = useNavigate();  // <-- thêm
 
   const fetchResults = async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await axios.post("/mixnet_and_tally");
+      const res = await axios.get("/results");
       setResults(res.data.tally);
     } catch (e) {
       console.error(e);
-      setError("Không thể tải kết quả. Vui lòng thử lại.");
+      setError("Cannot fetch results. Please try again later.");
     }
     setLoading(false);
   };
 
   return (
-    <div style={{ marginTop: 20 }}>
-      <button
-        onClick={fetchResults}
-        style={{
-          padding: "8px 16px",
-          backgroundColor: "#2563EB",
-          color: "#fff",
-          border: "none",
-          borderRadius: 4,
-          cursor: "pointer"
-        }}
-      >
-        Xem tổng số vote
-      </button>
+    <div style={{ marginTop: 20, maxWidth: 600, margin: "20px auto" }}>
+      <div style={{ display: "flex", gap: 10 }}>
+        <button
+          onClick={fetchResults}
+          style={{
+            flex: 1,
+            padding: "8px 16px",
+            backgroundColor: "#2563EB",
+            color: "#fff",
+            border: "none",
+            borderRadius: 4,
+            cursor: "pointer"
+          }}
+        >
+          Total Votes Results
+        </button>
 
-      {loading && <p style={{ marginTop: 10 }}>Đang tải…</p>}
+        <button
+          onClick={() => navigate("/")}  // <-- xử lý chuyển về home
+          style={{
+            flex: 1,
+            padding: "8px 16px",
+            backgroundColor: "#4CAF50",
+            color: "#fff",
+            border: "none",
+            borderRadius: 4,
+            cursor: "pointer"
+          }}
+        >
+          Return to Home
+        </button>
+      </div>
+      
+      {loading && <p style={{ marginTop: 10 }}>Loading...</p>}
       {error && (
         <p style={{ marginTop: 10, color: "red" }}>
           {error}
@@ -56,7 +76,7 @@ export default function VoteResults() {
               }}
             >
               <span>{candidate}</span>
-              <span>{count} phiếu</span>
+              <span>{count} votes</span>
             </li>
           ))}
         </ul>

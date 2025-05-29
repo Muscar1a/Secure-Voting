@@ -13,6 +13,7 @@ function App() {
         <Routes>
           <Route path="/" element={<VotingForm />} />
           <Route path="/thankyou" element={<ThankYou />} />
+          <Route path="/results" element={<VoteResults />} />
         </Routes>
       </div>
     </Router>

@@ -109,6 +109,9 @@ async def get_all_votes() -> List[Vote]: # Giữ nguyên
 async def get_all_voters() -> List[Voter]: # Giữ nguyên
     return await Voter.find_all().to_list()
 
+async def get_pending_votes() -> List[Vote]:
+    # RECEIVED_PENDING_PROCESSING
+    return await Vote.find(Vote.status == VoteStatus.RECEIVED_PENDING_PROCESSING).to_list()
 # Hàm populate_initial_voters_if_empty() giữ nguyên
 
 async def delete_all_votes() -> int:
