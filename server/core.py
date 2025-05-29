@@ -1,6 +1,5 @@
-# backend/app/core.py
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Optional # Dùng Optional nếu DATABASE_NAME có thể không được set
+from typing import Optional
 
 class Settings(BaseSettings):
 
@@ -15,4 +14,4 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-print(f"CORE.PY - Loaded Settings: MONGODB_URL='{settings.MONGODB_URL}', DATABASE_NAME='{settings.DATABASE_NAME}'")
+# print(f"CORE.PY - Loaded Settings: MONGODB_URL='{settings.MONGODB_URL}', DATABASE_NAME='{settings.DATABASE_NAME}'")

@@ -7,7 +7,7 @@ export default function VoteResults() {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const navigate = useNavigate();  // <-- thêm
+  const navigate = useNavigate();
 
   const fetchResults = async () => {
     setLoading(true);
@@ -41,7 +41,7 @@ export default function VoteResults() {
         </button>
 
         <button
-          onClick={() => navigate("/")}  // <-- xử lý chuyển về home
+          onClick={() => navigate("/")}
           style={{
             flex: 1,
             padding: "8px 16px",

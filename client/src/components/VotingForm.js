@@ -18,18 +18,18 @@ const API_BASE_URL = 'http://localhost:8000';
 
 function VotingForm() {
   const [personalId, setPersonalId] = useState('');
-  // Lấy token từ localStorage khi component mount, nếu có
+  
   const [voteToken, setVoteToken] = useState(localStorage.getItem('voteToken') || '');
   const [selectedOption, setSelectedOption] = useState('');
   const [encryptedVote, setEncryptedVote] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // Sửa lại tên biến cho nhất quán
+  const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
 
   const VOTE_OPTIONS = ['Candidate A', 'Candidate B', 'Candidate C', 'Candidate D'];
 
-  // localStorage.removeItem('voteToken'); // << XÓA HOẶC COMMENT DÒNG NÀY Ở ĐÂY
+  // localStorage.removeItem('voteToken');
 
   const clearMessages = () => {
     setMessage('');
@@ -46,12 +46,12 @@ function VotingForm() {
   };
 
   const handleGetToken = async () => {
-    clearMessages(); // Gọi ở đầu để xóa thông báo cũ
+    clearMessages();
     if (!personalId) {
       setError('Please enter your Personal ID.');
       return;
     }
-    setIsLoading(true); // Bắt đầu loading
+    setIsLoading(true);
     try {
       const hashedId = await hashPersonalId(personalId);
       // console.log("[DEBUG]", `${API_BASE_URL}/get-vote-token`);
@@ -65,7 +65,7 @@ function VotingForm() {
       setError(errorMsg);
       // console.error("Error getting token:", err);
     } finally {
-      setIsLoading(false); // Kết thúc loading
+      setIsLoading(false);
     }
   };
 
@@ -90,13 +90,13 @@ function VotingForm() {
 
   useEffect(() => {
     if (selectedOption) {
-      clearMessages(); // Xóa thông báo khi người dùng chọn option mới
+      clearMessages();
       const ciphertext = encryptVote(selectedOption);
       setEncryptedVote(ciphertext);
     } else {
       setEncryptedVote('');
     }
-  }, [selectedOption]); // Chỉ chạy khi selectedOption thay đổi
+  }, [selectedOption]);
 
   const navigate = useNavigate();
 
@@ -117,19 +117,18 @@ function VotingForm() {
     }
     setIsLoading(true);
     try {
-      const response = await axios.post( // Lưu response lại
+      const response = await axios.post(
         `${API_BASE_URL}/submit-vote`,
         { encrypted_vote: encryptedVote },
         { headers: { Authorization: `Bearer ${voteToken}` } }
       );
-      // Xóa token và reset form SAU KHI gửi thành công
+
       setVoteToken('');
       localStorage.removeItem('voteToken'); // << DI CHUYỂN DÒNG NÀY VÀO ĐÂY
       setSelectedOption('');
       setEncryptedVote('');
-      setPersonalId(''); // Reset cả personal ID
-      setMessage(response.data.message || 'Vote submitted successfully! It is now pending external processing.'); // Sử dụng message từ backend
-      // console.log("[DEBUG] Vote submitted successfully", response.data);
+      setPersonalId('');
+      setMessage(response.data.message || 'Vote submitted successfully! It is now pending external processing.');
 
       /*
       setTimeout(() => {
@@ -152,12 +151,11 @@ function VotingForm() {
     }
   };
 
-  // Thêm nút để người dùng có thể chủ động xóa token nếu họ muốn bắt đầu lại
   const handleClearTokenAndRestart = () => {
     clearMessages();
     setVoteToken('');
     localStorage.removeItem('voteToken');
-    setPersonalId(''); // Có thể reset cả personal ID
+    setPersonalId('');
     setSelectedOption('');
     setEncryptedVote('');
     setMessage('Token cleared. You can request a new token.');
@@ -165,7 +163,7 @@ function VotingForm() {
 
   return (
     <div>
-      <h1>Secure Electronic Voting</h1> {/* Thêm tiêu đề */}
+      <h1>Secure Electronic Voting</h1>
       {message && <p style={{ color: 'green', border: '1px solid green', padding: '10px' }}>{message}</p>}
       {error && <p style={{ color: 'red', border: '1px solid red', padding: '10px' }}>{error}</p>}
 
@@ -188,7 +186,6 @@ function VotingForm() {
       ) : (
         <section>
           <h2>Step 2: Cast Your Vote</h2>
-          {/* <p>Your Vote Token: <code>{voteToken}</code></p> */}
           <p>Please select your preferred candidate:</p>
           <div>
             {VOTE_OPTIONS.map(option => (
@@ -210,13 +207,6 @@ function VotingForm() {
           </div>
           {selectedOption && <p>You selected: <strong>{selectedOption}</strong></p>}
 
-          {/* Không nhất thiết phải hiển thị encryptedVote cho người dùng cuối */}
-          {/* {encryptedVote && (
-            <div>
-              <p>Encrypted Vote (for submission):</p>
-              <textarea value={encryptedVote} readOnly rows={3} style={{ width: '90%', fontSize: '0.8em', color: '#555' }} />
-            </div>
-          )} */}
 
           <button
             onClick={handleSubmitVote}
