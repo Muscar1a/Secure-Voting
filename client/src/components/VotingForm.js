@@ -3,24 +3,17 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import JSEncrypt from 'jsencrypt'; // For RSA Encryption
 
-// !!! QUAN TRỌNG: Đây là PUBLIC KEY của hệ thống bỏ phiếu.
-// Trong thực tế, bạn sẽ lấy nó từ một nguồn đáng tin cậy, không hardcode trực tiếp
-// nếu nó thay đổi thường xuyên. Có thể fetch từ backend 1 lần.
-// Đây là một ví dụ public key RSA (bạn cần tạo cặp khóa riêng của mình)
-// Bạn có thể tạo cặp khóa RSA online hoặc dùng OpenSSL:
-// openssl genrsa -out private_key.pem 2048
-// openssl rsa -pubout -in private_key.pem -out public_key.pem
 const VOTING_SYSTEM_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsj7WxRYLzvg6PwN5VJ0p
-rI3bhJq0c2T7uFzP5nOVldn2OQQtWqT4gTzSzFkHqwqkVL5WzXhfBp1LX2Ps7P36
-TqA1O5v9v7rh2v3vL8cJyR7nFjz6e8ZeqkqI+YX7DZCq4Xezb9hlG2lQtW6LjRZ7
-LnMzJMjZH62aCUeR2L9UUS1vGx10y6xkHJNL7Z9FjkaG0B+u2AXZl1q+zJqHcoPz
-RleuKr1nxHh7pxmz8W+whkv7lDZtRMYcM1TW82LjGqUJOx1CjAvPQJkV9qPq5Q7b
-m6kLacYmF9y9qJyQOHXoQJ6IzEYWbkLrDLBiqm+7fwp34vTNBOq6Yt4wOgT2+8LC
-twIDAQAB
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzXVFODm2NX+NTwGpB4Hc
+cndgl6I2EYBnbugqqeAlEcR70mgB5xO0Er/jW/mwkmx+xs4LsgV8x+kyGj4ZLjS+
+dWCUswytbYAXYL5+YdvtQS32W5T99Q9AWM1NTdjIVm8aPI6cL6xeVQUpjIrlUPqp
+megF7gXCQtM3IV9PsQT2AUyZr49X+hmHocVySkbtaB0D7S8XkYbVgRzfJS0Rb0Ad
+utTGH5HG+5GFDrsUxRHj30xU1ZAjvPj15hptUEzPPmFBfNHvxcyYNbqjkBDYT9zI
+zCiyie9QRWrbhaQi2NgOXLZSRpE9sRN2o3ahbpvmvCILVTAo/5iliK8khMdinFfp
+qwIDAQAB
 -----END PUBLIC KEY-----`;
 
-const API_BASE_URL = 'http://localhost:8000'; // Địa chỉ backend FastAPI
+const API_BASE_URL = 'http://localhost:8000';
 
 function VotingForm() {
   const [personalId, setPersonalId] = useState('');
@@ -40,6 +33,14 @@ function VotingForm() {
     setError('');
   }
 
+  const hashPersonalId = async (personalId) => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(personalId);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+  };
 
   const handleGetToken = async () => {
     setError('');
@@ -49,8 +50,9 @@ function VotingForm() {
       return;
     }
     try {
+      const hashedId = await hashPersonalId(personalId);
       console.log("[DEBUG]", `${API_BASE_URL}/get-vote-token`);
-      const response = await axios.post(`${API_BASE_URL}/get-vote-token`, { personal_id: personalId });
+      const response = await axios.post(`${API_BASE_URL}/get-vote-token`, { personal_id: hashedId });
       setVoteToken(response.data.vote_token);
       localStorage.setItem('voteToken', response.data.vote_token); // Lưu token
       setMessage('Vote token received successfully!');
