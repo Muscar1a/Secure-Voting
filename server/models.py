@@ -39,8 +39,8 @@ class Vote(Document):
     encrypted_vote_data: str = Field(...)
     vote_token_used: str = Field(..., index=True)
     submitted_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Timestamp of vote submission")
-
-
+    decrypted_candidate: Optional[str] = None # decrypt
+    shuffled_index: Optional[int] = None #mixnet
     class Settings:
         name = "votes"
         

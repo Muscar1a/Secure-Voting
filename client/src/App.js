@@ -1,7 +1,7 @@
 import logo from './logo.svg';
 import './App.css';
 import VotingForm from './components/VotingForm';
-
+import VoteResults from "./components/VoteResults";
 function App() {
   return (
     <div className="App">
@@ -10,6 +10,7 @@ function App() {
       </header>
       <main>
         <VotingForm />
+        <VoteResults />
       </main>
     </div>
   );

@@ -11,13 +11,13 @@ import JSEncrypt from 'jsencrypt'; // For RSA Encryption
 // openssl genrsa -out private_key.pem 2048
 // openssl rsa -pubout -in private_key.pem -out public_key.pem
 const VOTING_SYSTEM_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsj7WxRYLzvg6PwN5VJ0p
-rI3bhJq0c2T7uFzP5nOVldn2OQQtWqT4gTzSzFkHqwqkVL5WzXhfBp1LX2Ps7P36
-TqA1O5v9v7rh2v3vL8cJyR7nFjz6e8ZeqkqI+YX7DZCq4Xezb9hlG2lQtW6LjRZ7
-LnMzJMjZH62aCUeR2L9UUS1vGx10y6xkHJNL7Z9FjkaG0B+u2AXZl1q+zJqHcoPz
-RleuKr1nxHh7pxmz8W+whkv7lDZtRMYcM1TW82LjGqUJOx1CjAvPQJkV9qPq5Q7b
-m6kLacYmF9y9qJyQOHXoQJ6IzEYWbkLrDLBiqm+7fwp34vTNBOq6Yt4wOgT2+8LC
-twIDAQAB
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzXVFODm2NX+NTwGpB4Hc
+cndgl6I2EYBnbugqqeAlEcR70mgB5xO0Er/jW/mwkmx+xs4LsgV8x+kyGj4ZLjS+
+dWCUswytbYAXYL5+YdvtQS32W5T99Q9AWM1NTdjIVm8aPI6cL6xeVQUpjIrlUPqp
+megF7gXCQtM3IV9PsQT2AUyZr49X+hmHocVySkbtaB0D7S8XkYbVgRzfJS0Rb0Ad
+utTGH5HG+5GFDrsUxRHj30xU1ZAjvPj15hptUEzPPmFBfNHvxcyYNbqjkBDYT9zI
+zCiyie9QRWrbhaQi2NgOXLZSRpE9sRN2o3ahbpvmvCILVTAo/5iliK8khMdinFfp
+qwIDAQAB
 -----END PUBLIC KEY-----`;
 
 const API_BASE_URL = 'http://localhost:8000'; // Địa chỉ backend FastAPI

@@ -83,3 +83,13 @@ async def get_all_votes() -> List[Vote]:
 
 async def get_all_voters() -> List[Voter]:
     return await Voter.find_all().to_list()
+
+async def delete_all_votes() -> int:
+    """
+    Xóa tất cả document trong collection Vote bằng Motor.
+    Trả về số document đã xóa.
+    """
+    # get_motor_collection() trả về motor collection nằm dưới hood của Beanie
+    result = await Vote.get_motor_collection().delete_many({})
+    print(f"CRUD: Deleted {result.deleted_count} votes")
+    return result.deleted_count

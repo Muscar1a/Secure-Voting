@@ -1,11 +1,11 @@
 # backend/app/main.py
-from fastapi import FastAPI, HTTPException, Depends, Header, status
+from fastapi import FastAPI, HTTPException, Depends, Header, status, APIRouter
 from fastapi.middleware.cors import CORSMiddleware # Thêm CORS
 from typing import List
 import uuid
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
-
+from router import router
 import crud  # Import your CRUD operations
 from models import (
     PersonalIdRequest,
@@ -39,7 +39,7 @@ app.add_middleware(
     allow_headers=["*"], # Cho phép tất cả các header
 )
 
-
+app.include_router(router) # Tạm thời chưa chia quyền nên mọi user đều có thể truy cập
 
 @app.on_event("startup")
 async def app_startup_event():
