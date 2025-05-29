@@ -1,2 +1,10 @@
 fastapi
 uvicorn
+pydantic 
+python-jose[cryptography] 
+passlib[bcrypt]
+motor
+beanie
+pydantic_settings
+dnspython
+
