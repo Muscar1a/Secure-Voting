@@ -35,11 +35,11 @@ async def mixnet_and_tally():
     # Re-encrypt + shuffle
     for vote in pending_votes:
         # Giải mã tạm nếu chưa có plaintext
-        if vote.decrypted_candidate:
-            pt_bytes = vote.decrypted_candidate.encode("utf-8")
-        else:
-            enc = base64.b64decode(vote.encrypted_vote_data)
-            pt_bytes = private_key.decrypt(enc, padding.PKCS1v15())
+        # if vote.decrypted_candidate:
+        #     pt_bytes = vote.decrypted_candidate.encode("utf-8")
+        # else:
+        enc = base64.b64decode(vote.encrypted_vote_data)
+        pt_bytes = private_key.decrypt(enc, padding.PKCS1v15())
 
         # Tái mã hóa
         ct_bytes = public_key.encrypt(pt_bytes, padding.PKCS1v15())
@@ -67,7 +67,7 @@ async def mixnet_and_tally():
         tally[candidate] = tally.get(candidate, 0) + 1
 
         # Cập nhật status & lưu decrypted_candidate
-        vote.decrypted_candidate = candidate
+        # vote.decrypted_candidate = candidate
         vote.status = VoteStatus.TALLIED_EXTERNALLY
         await vote.save()
 
@@ -88,11 +88,11 @@ async def process_and_get_results():
     # Re-encrypt + shuffle + mark processing
     for vote in pending:
         # nếu đã lưu decrypted_candidate thì dùng, còn không thì decrypt tạm
-        if vote.decrypted_candidate:
-            pt = vote.decrypted_candidate.encode()
-        else:
-            ct = base64.b64decode(vote.encrypted_vote_data)
-            pt = private_key.decrypt(ct, padding.PKCS1v15())
+        # if vote.decrypted_candidate:
+        #     pt = vote.decrypted_candidate.encode()
+        # else:
+        ct = base64.b64decode(vote.encrypted_vote_data)
+        pt = private_key.decrypt(ct, padding.PKCS1v15())
         # re-encrypt
         new_ct = public_key.encrypt(pt, padding.PKCS1v15())
         vote.encrypted_vote_data = base64.b64encode(new_ct).decode()
@@ -104,11 +104,11 @@ async def process_and_get_results():
 
     # decrypt & tally những vote vừa processing
     for vote in pending:
-        ct = base64.b64decode(vote.encrypted_vote_data)
-        pt = private_key.decrypt(ct, padding.PKCS1v15())
-        candidate = pt.decode()
-        # tallied
-        vote.decrypted_candidate = candidate
+        # ct = base64.b64decode(vote.encrypted_vote_data)
+        # pt = private_key.decrypt(ct, padding.PKCS1v15())
+        # candidate = pt.decode()
+        # # tallied
+        # vote.decrypted_candidate = candidate
         vote.status = VoteStatus.TALLIED_EXTERNALLY
         await vote.save()
 
@@ -116,8 +116,12 @@ async def process_and_get_results():
     all_tallied = await Vote.find(Vote.status == VoteStatus.TALLIED_EXTERNALLY).to_list()
     total = {}
     for vote in all_tallied:
-        cand = vote.decrypted_candidate
-        total[cand] = total.get(cand, 0) + 1
+        # cand = vote.decrypted_candidate
+        # total[cand] = total.get(cand, 0) + 1
+        ct = base64.b64decode(vote.encrypted_vote_data)
+        pt = private_key.decrypt(ct, padding.PKCS1v15())
+        candidate = pt.decode("utf-8")
+        total[candidate] = total.get(candidate, 0) + 1
 
     return {"tally": total}
 
@@ -140,9 +144,11 @@ async def mixnet_shuffle():
     Gán shuffled_index để ghi thứ tự mới.
     """
     public_key = load_public_key()
+    private_key = load_private_key()
     votes = await get_all_votes()
 
     # Re-encrypt plaintext candidate thành ciphertext mới
+    """
     for vote in votes:
         if not getattr(vote, "decrypted_candidate", None):
             # Skip phiếu chưa giải mã
@@ -150,6 +156,15 @@ async def mixnet_shuffle():
         pt = vote.decrypted_candidate.encode("utf-8")
         ct_bytes = public_key.encrypt(pt, padding.PKCS1v15())
         vote.encrypted_vote_data = base64.b64encode(ct_bytes).decode()
+    """
+    for vote in votes:
+        # Giải mã để lấy plaintext
+        ct = base64.b64decode(vote.encrypted_vote_data)
+        pt = private_key.decrypt(ct, padding.PKCS1v15())
+        
+        # Tái mã hóa
+        new_ct = public_key.encrypt(pt, padding.PKCS1v15())
+        vote.encrypted_vote_data = base64.b64encode(new_ct).decode()
 
     # Shuffle order bằng shuffled_index
     indices = list(range(len(votes)))

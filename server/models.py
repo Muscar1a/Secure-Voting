@@ -35,7 +35,7 @@ class Vote(Document):
     encrypted_vote_data: str = Field(...)
     vote_token_used: str = Field(..., index=True)
     submitted_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    decrypted_candidate: Optional[str] = None
+    # decrypted_candidate: Optional[str] = None
     shuffled_index: Optional[int] = None
     
     status: VoteStatus = Field(default=VoteStatus.RECEIVED_PENDING_PROCESSING)
